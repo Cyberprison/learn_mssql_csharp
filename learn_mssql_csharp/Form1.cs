@@ -29,6 +29,16 @@ namespace learn_mssql_csharp
             sqlConnection = new SqlConnection(ConfigurationManager.ConnectionStrings["TestDB"].ConnectionString);
 
             sqlConnection.Open();
+
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(
+                "SELECT * FROM Products", 
+                sqlConnection);
+
+            DataSet dataSet = new DataSet();
+
+            sqlDataAdapter.Fill(dataSet);
+
+            dataGridView2.DataSource = dataSet.Tables[0];
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -49,6 +59,8 @@ namespace learn_mssql_csharp
             sqlCommand.Parameters.AddWithValue("Email", textBox6.Text);
 
             MessageBox.Show(sqlCommand.ExecuteNonQuery().ToString());
+
+
         }
 
         private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
@@ -113,6 +125,39 @@ namespace learn_mssql_csharp
                 }
             }
 
+        }
+
+        private void textBox8_TextChanged(object sender, EventArgs e)
+        {
+            (dataGridView2.DataSource as DataTable).DefaultView.RowFilter = $"ProductName LIKE '%{textBox8.Text}%'";
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch(comboBox1.SelectedIndex)
+            {
+                case 0:
+                    {
+                        (dataGridView2.DataSource as DataTable).DefaultView.RowFilter = "UnitsInStock < 10";
+                        break;
+                    }
+                case 1:
+                    {
+                        (dataGridView2.DataSource as DataTable).DefaultView.RowFilter = "UnitsInStock >= 10 AND UnitxInStock < 50";
+                        break;
+                    }
+                case 2:
+                    {
+                        (dataGridView2.DataSource as DataTable).DefaultView.RowFilter = "UnitsInStock >= 50";
+                        break;
+                    }
+                default:
+                    {
+                        (dataGridView2.DataSource as DataTable).DefaultView.RowFilter = "";
+                        break;
+                    }
+
+            }
         }
     }
 }
