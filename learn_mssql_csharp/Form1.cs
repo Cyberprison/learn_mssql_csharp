@@ -63,9 +63,56 @@ namespace learn_mssql_csharp
             SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(
                 textBox7.Text,
                 sqlConnection);
+
             DataSet dataSet = new DataSet();
+
             sqlDataAdapter.Fill(dataSet);
+
             dataGridView1.DataSource = dataSet.Tables[0];
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            listView1.Items.Clear();
+
+            SqlDataReader sqlDataReader = null;
+
+            try
+            {
+                SqlCommand sqlCommand = new SqlCommand(
+                    "SELECT CategoryID, CategoryName " +
+                    "FROM Categories",
+                    sqlConnection
+                    );
+
+                sqlDataReader = sqlCommand.ExecuteReader();
+
+                ListViewItem listViewItem = null;
+
+                while (sqlDataReader.Read())
+                {
+                    listViewItem = new ListViewItem( new string[]
+                    {
+                        Convert.ToString(sqlDataReader["CategoryID"]),
+                        Convert.ToString(sqlDataReader["CategoryName"])
+                    });
+
+                    listView1.Items.Add(listViewItem);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                if(sqlDataReader != null && !sqlDataReader.IsClosed)
+                {
+                    sqlDataReader.Close();
+                }
+            }
+
         }
     }
 }
