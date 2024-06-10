@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
+using System.Data;
+using System.Linq;
 
 using System.Configuration;
 using System.Data.SqlClient;
@@ -16,6 +17,9 @@ namespace learn_mssql_csharp
     public partial class Form1 : Form
     {
         private SqlConnection sqlConnection = null;
+
+        private List<string[]> rows = null;
+        private List<string[]> filteredList = null;
 
         //т.к таблицы слились, новое подключение не нужно
 
@@ -39,6 +43,58 @@ namespace learn_mssql_csharp
             sqlDataAdapter.Fill(dataSet);
 
             dataGridView2.DataSource = dataSet.Tables[0];
+
+            //для вкладки LV Filter
+            rows = new List<string[]>();
+
+            SqlDataReader sqlDataReader = null;
+
+            string[] row = null;
+
+            try
+            {
+                SqlCommand sqlCommand = new SqlCommand(
+                    "SELECT ProductName, QuantityPerUnit, UnitPrice FROM Products",
+                    sqlConnection);
+
+                sqlDataReader = sqlCommand.ExecuteReader();
+
+                while (sqlDataReader.Read())
+                {
+                    row = new string[]
+                    {
+                        Convert.ToString(sqlDataReader["ProductName"]),
+                        Convert.ToString(sqlDataReader["QuantityPerUnit"]),
+                        Convert.ToString(sqlDataReader["UnitPrice"])
+                    };
+
+                    rows.Add(row);
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                if (sqlDataReader != null && !sqlDataReader.IsClosed)
+                {
+                    sqlDataReader.Close();
+                }
+
+            }
+
+            RefreshList(rows);
+        }
+
+        private void RefreshList(List<string[]> list)
+        {
+            listView2.Items.Clear();
+
+            foreach (string[] s in list)
+            {
+                listView2.Items.Add(new ListViewItem(s));
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -154,6 +210,48 @@ namespace learn_mssql_csharp
                 default:
                     {
                         (dataGridView2.DataSource as DataTable).DefaultView.RowFilter = "";
+                        break;
+                    }
+
+            }
+        }
+
+        private void textBox9_TextChanged(object sender, EventArgs e)
+        {
+            filteredList = rows.Where((x) => 
+                x[0].ToLower().Contains(textBox9.Text.ToLower())).ToList();
+
+            RefreshList(filteredList);
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (comboBox2.SelectedIndex)
+            {
+                case 0:
+                    {
+                        filteredList = rows.Where((x) =>
+                            Double.Parse(x[2]) <= 10).ToList();
+                        RefreshList(filteredList);
+                        break;
+                    }
+                case 1:
+                    {
+                        filteredList = rows.Where((x) =>
+                            Double.Parse(x[2]) > 10 && Double.Parse(x[2]) <= 100).ToList();
+                        RefreshList(filteredList);
+                        break;
+                    }
+                case 2:
+                    {
+                        filteredList = rows.Where((x) =>
+                            Double.Parse(x[2]) > 100).ToList();
+                        RefreshList(filteredList);
+                        break;
+                    }
+                case 3:
+                    {
+                        RefreshList(rows);
                         break;
                     }
 
